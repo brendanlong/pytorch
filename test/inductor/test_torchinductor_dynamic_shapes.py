@@ -1163,6 +1163,19 @@ class TestInductorDynamic(DynamicShapesTestCase):
         actual = cfn(arg)
         self.assertEqual(expect, actual)
 
+    def test_interpolate_fractional_scale_factor(self, device):
+        # The output length is trunc(1/300 * size), which needs all 17 digits
+        # of 1/300 to come out exact, in kernels as well as on the host.
+        def fn(x):
+            y = torch.nn.functional.interpolate(x, scale_factor=1 / 300, mode="linear")
+            return torch.nn.functional.interpolate(y, scale_factor=300, mode="linear")
+
+        cfn = self.compile_fn(fn)
+        for length in (3, 10):
+            x = torch.arange(300 * length, device=device, dtype=torch.float32)
+            x = x.repeat(1, 2, 1)
+            self.assertEqual(cfn(x), fn(x))
+
     def test_full_recompiles(self, device):
         def fn(x):
             _, L = x.shape
