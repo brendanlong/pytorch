@@ -967,10 +967,10 @@ class TritonPrinter(PythonPrinter):  # noqa: docstring_linter
             # xref: https://github.com/sympy/sympy/issues/26620
             ret = str(int(expr))
         elif config.is_fbcode() and torch.version.hip:
-            ret = f"{expr}"
+            ret = super()._print_Float(expr)
         else:
             float_type = self._get_scalar_float_type()
-            ret = f"tl.full([], {expr}, {float_type})"
+            ret = f"tl.full([], {super()._print_Float(expr)}, {float_type})"
         return ret
 
     def _print_ToFloat(self, expr: sympy.Expr) -> str:
